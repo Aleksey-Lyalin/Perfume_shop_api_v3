@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int             @id @default(autoincrement())
+  email        String          @unique
+  passwordHash String
+  fullName     String
+  role         String
+  createdAt    DateTime        @default(now())
+  messages     Message[]
+  threads      MessageThread[]
+  orders       Order[]
+  reviews      Review[]
+  wishlist     Wishlist[]
+}
+
+model Perfume {
+  article        Int            @id
+  name           String
+  fullName       String
+  volume         Decimal
+  seoSlug        String?
+  description    String?
+  releaseYear    Int?
+  brandId        Int
+  densityId      Int
+  genderId       Int
+  productType    Boolean
+  longevity      String?        @db.VarChar(100)
+  randewooId     Int?
+  topNotes       String[]
+  middleNotes    String[]
+  baseNotes      String[]
+  singleNote     String[]
+  fragranceGroup String[]
+  countryid      Int?
+  orderItems     OrderItem[]
+  brand          Brand          @relation(fields: [brandId], references: [id])
+  density        Density        @relation(fields: [densityId], references: [id])
+  gender         Gender         @relation(fields: [genderId], references: [id])
+  country        country?       @relation(fields: [countryid], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_perfume_country")
+  images         PerfumeImage[]
+  priceHistory   PriceHistory[]
+  reviews        Review[]
+  wishlistItems  Wishlist[]
+}
+
+model Brand {
+  id       Int       @id @default(autoincrement())
+  name     String
+  perfumes Perfume[]
+}
+
+model Gender {
+  id       Int       @id @default(autoincrement())
+  gender   String    @db.Char(20)
+  perfumes Perfume[]
+}
+
+model Density {
+  id       Int       @id @default(autoincrement())
+  name     String
+  slug     String
+  perfumes Perfume[]
+}
+
+model PerfumeImage {
+  id        Int      @id @default(autoincrement())
+  article   Int?
+  type      String?  @db.VarChar(10)
+  index     Int?     @db.SmallInt
+  url       String?
+  isMain    Boolean? @default(false) @map("ismain")
+  altText   String?  @map("alttext")
+  sortOrder Int?     @default(0)     @map("sortorder")
+  perfume   Perfume? @relation(fields: [article], references: [article], onDelete: Cascade, onUpdate: NoAction)
+}
+
+
+model PriceHistory {
+  id        Int      @id @default(autoincrement())
+  article   Int
+  price     Decimal
+  updatedAt DateTime @default(now())
+  perfume   Perfume  @relation(fields: [article], references: [article])
+}
+
+model Order {
+  id                Int                  @id @default(autoincrement())
+  customer_id       Int
+  total             Decimal
+  current_status_id Int
+  created_at        DateTime             @default(now())
+  status            OrderStatus          @relation(fields: [current_status_id], references: [id])
+  customer          User                 @relation(fields: [customer_id], references: [id])
+  items             OrderItem[]
+  statusHistory     OrderStatusHistory[]
+}
+
+model OrderItem {
+  id       String  @id
+  quantity Int
+  price    Decimal
+  article  Int
+  orderId  Int
+  perfume  Perfume @relation(fields: [article], references: [article])
+  order    Order   @relation(fields: [orderId], references: [id])
+}
+
+model OrderStatus {
+  id          Int                  @id @default(autoincrement())
+  code        String
+  name        String
+  description String
+  sort_order  Int
+  orders      Order[]
+  history     OrderStatusHistory[]
+}
+
+model OrderStatusHistory {
+  id         Int         @id @default(autoincrement())
+  order_id   Int
+  status_id  Int
+  updated_at DateTime    @default(now())
+  updated_by String
+  order      Order       @relation(fields: [order_id], references: [id])
+  status     OrderStatus @relation(fields: [status_id], references: [id])
+}
+
+model Review {
+  id        String   @id
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  article   Int
+  userId    Int
+  perfume   Perfume  @relation(fields: [article], references: [article])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Wishlist {
+  id      String   @id
+  userId  Int
+  article Int
+  addedAt DateTime @default(now())
+  perfume Perfume  @relation(fields: [article], references: [article])
+  user    User     @relation(fields: [userId], references: [id])
+}
+
+model MessageThread {
+  id        String    @id
+  userId    Int
+  createdAt DateTime  @default(now())
+  messages  Message[]
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model Message {
+  id        String        @id
+  threadId  String
+  userId    Int
+  content   String
+  createdAt DateTime      @default(now())
+  thread    MessageThread @relation(fields: [threadId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+}
+
+model country {
+  id      Int       @id
+  country String    @db.VarChar(100)
+  Perfume Perfume[]
+}

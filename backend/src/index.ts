@@ -1,33 +1,3 @@
-// import Fastify from 'fastify'
-// import perfumeRoutes from './routes/perfume'
-// import path from 'path'
-// import fastifyMultipart from '@fastify/multipart'
-// import fastifyStatic from '@fastify/static'
-
-
-// const app = Fastify({ logger: true })
-
-// // Подключение multipart
-// app.register(fastifyMultipart)
-
-// // Подключение статической папки для изображений
-// app.register(fastifyStatic, {
-//   root: path.join(__dirname, '../public'),
-//   prefix: '/public/', // URL → /public/images/...
-// })
-
-// // Роут для загрузки изображений
-// app.register(uploadRoutes, { prefix: '/api' })
-
-// app.register(perfumeRoutes, { prefix: '/api' })
-
-// app.listen({ port: 3000 }, (err, address) => {
-//   if (err) {
-//     app.log.error(err)
-//     process.exit(1)
-//   }
-//   console.log(`Server running at ${address}`)
-// })
 import Fastify from 'fastify'
 import path from 'path'
 import fastifyMultipart from '@fastify/multipart'
@@ -35,14 +5,14 @@ import fastifyStatic from '@fastify/static'
 import fastifyCors from '@fastify/cors'
 import { PATHS } from './config/paths'
 import dotenv from 'dotenv'
-import uploadRoutes from './routes/upload'
-import perfumeRoutes from './routes/perfume'
+import perfumePlugin from './plugins/perfumePlugin'
+import uploadPlugin from './plugins/uploadPlugin'
 
 // Загружаем переменные окружения
 dotenv.config()
 
 // Создаем экземпляр приложения
-const app = Fastify({ 
+const app = Fastify({
   logger: true,
   ajv: {
     customOptions: {
@@ -75,16 +45,16 @@ async function registerPlugins() {
     }
   })
 
-  // Регистрируем роуты
-  await app.register(perfumeRoutes, { prefix: '/api' })
-  await app.register(uploadRoutes, { prefix: '/api' })
+  // Регистрируем плагины с маршрутами
+  await app.register(perfumePlugin, { prefix: '/api' })
+  await app.register(uploadPlugin, { prefix: '/api' })
 }
 
 // Функция запуска сервера
 async function startServer() {
   try {
     await registerPlugins()
-    
+
     const port = process.env.PORT ? parseInt(process.env.PORT) : 3000
     const host = process.env.HOST || '0.0.0.0'
 
@@ -103,3 +73,5 @@ process.on('unhandledRejection', (err) => {
 })
 
 startServer()
+
+

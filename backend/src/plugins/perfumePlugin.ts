@@ -11,7 +11,15 @@ import {
 
 export default async function perfumePlugin(app: FastifyInstance) {
   // GET /api/perfumes - получение списка парфюмов
-  app.get('/perfumes', { schema: getPerfumesSchema }, async (req, reply) => {
+  app.get('/perfumes', { 
+    schema: getPerfumesSchema,
+    // Добавляем метаданные для Swagger
+    config: {
+      tags: ['perfumes'],
+      description: 'Получение списка парфюмов с пагинацией',
+      summary: 'Получить список парфюмов'
+    }
+  }, async (req, reply) => {
     const { limit = 20, offset = 0 } = req.query as {
       limit?: number
       offset?: number
@@ -46,7 +54,14 @@ export default async function perfumePlugin(app: FastifyInstance) {
   })
 
   // GET /api/perfumes/:article - получение парфюма по артикулу
-  app.get('/perfumes/:article', { schema: getPerfumeByArticleSchema }, async (req, reply) => {
+  app.get('/perfumes/:article', { 
+    schema: getPerfumeByArticleSchema,
+    config: {
+      tags: ['perfumes'],
+      description: 'Получение детальной информации о парфюме по его артикулу',
+      summary: 'Получить парфюм по артикулу'
+    }
+  }, async (req, reply) => {
     const { article } = req.params as { article: number }
 
     const perfume = await prisma.perfume.findUnique({
@@ -78,7 +93,14 @@ export default async function perfumePlugin(app: FastifyInstance) {
   })
 
   // POST /api/perfumes - создание нового парфюма
-  app.post('/perfumes', { schema: createPerfumeSchema }, async (req, reply) => {
+  app.post('/perfumes', { 
+    schema: createPerfumeSchema,
+    config: {
+      tags: ['perfumes'],
+      description: 'Создание нового парфюма',
+      summary: 'Создать новый парфюм'
+    }
+  }, async (req, reply) => {
     const perfumeData = req.body as {
       name: string
       fullName: string
@@ -103,7 +125,14 @@ export default async function perfumePlugin(app: FastifyInstance) {
   })
 
   // PUT /api/perfumes/:article - обновление парфюма
-  app.put('/perfumes/:article', { schema: updatePerfumeSchema }, async (req, reply) => {
+  app.put('/perfumes/:article', { 
+    schema: updatePerfumeSchema,
+    config: {
+      tags: ['perfumes'],
+      description: 'Обновление существующего парфюма по артикулу',
+      summary: 'Обновить парфюм'
+    }
+  }, async (req, reply) => {
     const { article } = req.params as { article: number }
     const updateData = req.body as {
       name?: string
@@ -140,7 +169,14 @@ export default async function perfumePlugin(app: FastifyInstance) {
   })
 
   // DELETE /api/perfumes/:article - удаление парфюма
-  app.delete('/perfumes/:article', { schema: deletePerfumeSchema }, async (req, reply) => {
+  app.delete('/perfumes/:article', { 
+    schema: deletePerfumeSchema,
+    config: {
+      tags: ['perfumes'],
+      description: 'Удаление парфюма по артикулу',
+      summary: 'Удалить парфюм'
+    }
+  }, async (req, reply) => {
     const { article } = req.params as { article: number }
 
     try {

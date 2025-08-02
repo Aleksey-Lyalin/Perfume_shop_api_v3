@@ -11,7 +11,14 @@ const unlink = util.promisify(fs.unlink)
 
 export default async function uploadPlugin(app: FastifyInstance) {
   // POST /api/upload-image - загрузка изображения
-  app.post('/upload-image', { schema: uploadImageSchema }, async (req, reply) => {
+  app.post('/upload-image', { 
+    schema: uploadImageSchema,
+    config: {
+      tags: ['images'],
+      description: 'Загрузка изображения для парфюма',
+      summary: 'Загрузить изображение'
+    }
+  }, async (req, reply) => {
     try {
       const data = await req.file()
       
@@ -82,7 +89,14 @@ export default async function uploadPlugin(app: FastifyInstance) {
   })
 
   // PUT /api/images/:id - обновление информации об изображении
-  app.put('/images/:id', { schema: updateImageSchema }, async (req, reply) => {
+  app.put('/images/:id', { 
+    schema: updateImageSchema,
+    config: {
+      tags: ['images'],
+      description: 'Обновление информации об изображении',
+      summary: 'Обновить информацию об изображении'
+    }
+  }, async (req, reply) => {
     const { id } = req.params as { id: number }
     const updateData = req.body as {
       isMain?: boolean
@@ -127,7 +141,14 @@ export default async function uploadPlugin(app: FastifyInstance) {
   })
 
   // DELETE /api/images/:id - удаление изображения
-  app.delete('/images/:id', { schema: deleteImageSchema }, async (req, reply) => {
+  app.delete('/images/:id', { 
+    schema: deleteImageSchema,
+    config: {
+      tags: ['images'],
+      description: 'Удаление изображения',
+      summary: 'Удалить изображение'
+    }
+  }, async (req, reply) => {
     const { id } = req.params as { id: number }
 
     try {

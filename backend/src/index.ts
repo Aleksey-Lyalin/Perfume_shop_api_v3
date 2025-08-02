@@ -7,11 +7,10 @@ import { PATHS } from './config/paths'
 import dotenv from 'dotenv'
 import perfumePlugin from './plugins/perfumePlugin'
 import uploadPlugin from './plugins/uploadPlugin'
-// import swaggerPlugin from './plugins/swaggerPlugin' // ЭТА СТРОКА ДОЛЖНА БЫТЬ ЗАКОММЕНТИРОВАНА ИЛИ УДАЛЕНА
 
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
-
+import fastifyHelmet from '@fastify/helmet'
 
 // Загружаем переменные окружения
 dotenv.config()
@@ -28,8 +27,54 @@ const app = Fastify({
   }
 })
 
-/// Регистрируем плагины
+// Регистрируем плагины
 async function registerPlugins() {
+  // Регистрируем Helmet для безопасности (должен быть первым)
+  await app.register(fastifyHelmet, {
+    // Базовые настройки
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Добавлено 'unsafe-inline' и 'unsafe-eval' для Swagger UI
+        styleSrc: ["'self'", "'unsafe-inline'"], // Добавлено 'unsafe-inline' для Swagger UI
+        imgSrc: ["'self'", "data:", "blob:", "validator.swagger.io"], // Добавлено validator.swagger.io
+        connectSrc: ["'self'", "https:", "http:", "ws:", "wss:", "validator.swagger.io"], // Добавлено http:, ws:, wss: и validator.swagger.io
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", "data:", "blob:"],
+        frameSrc: ["'none'"],
+      }
+    },
+    // Защита от кликджекинга
+    xFrameOptions: {
+      action: 'deny'
+    },
+    // Защита от MIME-sniffing
+    contentTypeOptions: true,
+    // Защита от XSS
+    xssFilter: true,
+    // Запрет на загрузку в iframe
+    // frameguard: {
+      // action: 'deny'
+    // },
+    // Запрет на кэширование конфиденциальных данных
+    noCache: true,
+    // Запрет на отображение в iframe
+    referrerPolicy: {
+      policy: 'no-referrer'
+    },
+    // Запрет на определение типа MIME
+    permittedCrossDomainPolicies: {
+      permittedPolicies: 'none'
+    },
+    // Защита от DNS prefetching
+    dnsPrefetchControl: {
+      allow: false
+    },
+    // Защита от кликджекинга
+    hidePoweredBy: true
+  } )
+
   // CORS для работы с фронтендом
   await app.register(fastifyCors, {
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -54,7 +99,7 @@ async function registerPlugins() {
   await app.register(perfumePlugin, { prefix: '/api' })
   await app.register(uploadPlugin, { prefix: '/api' })
 
-  // !!! ЭТОТ БЛОК ДОЛЖЕН БЫТЬ ТАК !!!
+  // Регистрируем Swagger для документации API напрямую
   await app.register(fastifySwagger, {
     openapi: {
       info: {
@@ -99,11 +144,10 @@ async function registerPlugins() {
       deepLinking: true,
       displayRequestDuration: true
     },
-    staticCSP: true,
-    transformStaticCSP: (header) => header
+    staticCSP: false, // Изменено на false
+    // transformStaticCSP: (header) => header // Удалена эта строка
   })
 }
-
 
 // Функция запуска сервера
 async function startServer() {
@@ -115,10 +159,10 @@ async function startServer() {
 
     await app.listen({ port, host })
     console.log(`🚀 Сервер запущен на ${host}:${port}`)
-
+    console.log(`🔒 Безопасность: Helmet активирован`)
+    
     app.ready((err) => {
       if (err) throw err
-      // app.swagger() // ЭТА СТРОКА ДОЛЖНА БЫТЬ ЗАКОММЕНТИРОВАНА ИЛИ УДАЛЕНА
       console.log(`📚 Документация API доступна по адресу http://${host}:${port}/docs` )
     })
 
